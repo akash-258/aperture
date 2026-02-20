@@ -41,34 +41,18 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
   const currentSeconds = currentTime;
   const durationSeconds = duration;
 
-  const handleTimelineHover = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleHoverMove = (e: React.PointerEvent<HTMLInputElement>) => {
+    if (isScrubbing) return;
     const rect = e.currentTarget.getBoundingClientRect();
     setTimelineWidth(rect.width);
     const x = e.clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, x / rect.width));
-    const newTime = percentage * duration;
-
-    if (isScrubbing) {
-      onScrubMove(newTime);
-    } else {
-      setHoverTime(newTime);
-    }
+    setHoverTime(percentage * duration);
   };
 
-  const handleTimelineLeave = () => {
-    if (!isScrubbing) {
-      setHoverTime(null);
-      setIsHoveringProgress(false);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setTimelineWidth(rect.width);
-    const x = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, x / rect.width));
-    onScrubStart(percentage * duration);
+  const handleHoverLeave = () => {
+    setHoverTime(null);
+    setIsHoveringProgress(false);
   };
 
   const activeThumbTime = scrubbingValue !== null ? scrubbingValue : hoverTime;
@@ -105,10 +89,7 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
       className="group/progress relative w-full h-4 flex items-center cursor-pointer"
       data-progress-bar
       onMouseEnter={() => setIsHoveringProgress(true)}
-      onMouseLeave={() => {
-        setIsHoveringProgress(false);
-        handleTimelineLeave();
-      }}
+      onMouseLeave={handleHoverLeave}
     >
       <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm relative group-hover/progress:h-2 transition-all duration-200">
         {/* Buffered Ranges */}
@@ -133,7 +114,7 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
             );
           })}
         <div
-          className="absolute top-0 left-0 h-full bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+          className="absolute top-0 left-0 h-full bg-primary rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)]"
           style={{
             width: `${durationSeconds > 0 ? ((isScrubbing && scrubbingValue !== null ? scrubbingValue : currentSeconds) / durationSeconds) * 100 : 0}%`,
             transition: isScrubbing ? "none" : "width 0.05s linear",
@@ -192,25 +173,31 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
         );
       })}
 
-      <div
-        className="absolute inset-0 cursor-pointer"
-        onMouseMove={(e) => {
-          if (!isScrubbing) {
-            handleTimelineHover(e);
-          }
+      <input
+        type="range"
+        min={0}
+        max={durationSeconds || 100}
+        step="any"
+        value={
+          isScrubbing && scrubbingValue !== null
+            ? scrubbingValue
+            : currentSeconds
+        }
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-40 touch-none"
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          onScrubStart(parseFloat(e.currentTarget.value));
         }}
-        onMouseDown={handleMouseDown}
-        onClick={(e) => {
-          if (!isScrubbing) {
-            e.stopPropagation();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const percentage = Math.max(0, Math.min(1, x / rect.width));
-            onScrubStart(percentage * durationSeconds); // Start scrub also seeks on click
-            manager.seek(percentage * durationSeconds * 10000000);
-            onScrubEnd(percentage * durationSeconds); // Immediate end
-          }
+        onChange={(e) => {
+          onScrubMove(parseFloat(e.target.value));
         }}
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          const val = parseFloat(e.currentTarget.value);
+          manager.seek(val * 10000000);
+          onScrubEnd(val);
+        }}
+        onPointerMove={handleHoverMove}
       />
     </div>
   );
