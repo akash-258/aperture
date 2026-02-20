@@ -70,6 +70,25 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t aperture-web:${VERSION} .
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" |
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Tag and push docker images
+        env:
+          VERSION: ${{ env.VERSION }}
+        run: |
+          # Tag for Docker Hub
+          docker tag aperture-web:${VERSION} ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${VERSION}
+          docker tag aperture-web:${VERSION} ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:latest
+
+          # Push
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${VERSION}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:latest
+
+      - name: Save image artifact (optional - keep your current)
+        run: |
           mkdir -p build
           docker save aperture-web:${VERSION} | gzip > "build/aperture-web-${VERSION}.tar.gz"
 
