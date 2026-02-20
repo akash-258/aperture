@@ -70,6 +70,7 @@ Special Thanks to **[@AyaanZaveri](https://github.com/AyaanZaveri)**, this is ba
 - ~~**Better Connectivity** – Added **Local Network Discovery** and saved server preferences to make connecting (and staying connected) easier.~~ **Note: Removed this due to inaccuracy**
 - **Refined Startup** – A proper **Splash Screen** now handles initialization, ensuring the app launches smoothly and efficiently every time.
 - **Seerr Integration** - Built-in support to integrate Jellyseerr or Overseerr, Once connected, requests can be made directly on the discover page or using the existing search component.
+
 ---
 
 ## 🧠 Built With
@@ -83,7 +84,32 @@ Special Thanks to **[@AyaanZaveri](https://github.com/AyaanZaveri)**, this is ba
 
 ## ⚙️ Instructions
 
-### Local Development
+### 🐳 Run with Docker (Recommended)
+
+Docker is the recommended way to run the app. The Docker image is directly available on Docker Hub at `akhilmulpuri/aperture-web`.
+
+**Using Docker Compose (`docker-compose.yml`)**
+
+```yaml
+services:
+  aperture:
+    image: akhilmulpuri/aperture-web:latest
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+```
+
+```bash
+docker-compose up -d
+```
+
+**Using Docker Run**
+
+```bash
+docker run -d -p 3000:3000 --name aperture-web --restart unless-stopped akhilmulpuri/aperture-web:latest
+```
+
+### 💻 Local Development
 
 1. **Install dependencies**
    ```bash
@@ -107,16 +133,6 @@ bun preview   # optional sanity check
 ```
 
 The generated assets live in `dist/`. Configure your host to fall back to `index.html` for SPA routing.
-
-### Docker
-
-**docker-compose**
-
-```bash
-docker-compose up --build
-```
-
-The container serves the built app via the port exposed in `Dockerfile`/`docker-compose.yml`. Adjust env vars (server URL, etc.) via compose overrides or `docker run -e`.
 
 ### Public HTTP Jellyfin Servers
 
