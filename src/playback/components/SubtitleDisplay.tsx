@@ -26,7 +26,7 @@ interface SubtitleDisplayProps {
  * Parse HTML tags in subtitle text and convert to React elements with proper nesting
  */
 function parseSubtitleHTML(text: string): React.ReactNode {
-  const htmlRegex = /<(\/?)([a-z]+)>/gi;
+  const htmlRegex = /<(\/?)([a-zA-Z0-9-]+)[^>]*>/gi;
   const segments: (React.ReactNode | { tag: string; isClosing: boolean })[] =
     [];
   let lastIndex = 0;
