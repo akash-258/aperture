@@ -27,8 +27,10 @@ interface SubtitleDisplayProps {
  */
 function parseSubtitleHTML(text: string): React.ReactNode {
   const htmlRegex = /<(\/?)([a-zA-Z0-9-]+)[^>]*>/gi;
-  const segments: (React.ReactNode | { tag: string; isClosing: boolean })[] =
-    [];
+  const segments: (
+    | React.ReactNode
+    | { tag: string; isClosing: boolean; attributes: string }
+  )[] = [];
   let lastIndex = 0;
 
   let match;
@@ -42,6 +44,7 @@ function parseSubtitleHTML(text: string): React.ReactNode {
     segments.push({
       tag: match[2].toLowerCase(),
       isClosing: match[1] === "/",
+      attributes: match[0],
     });
 
     lastIndex = match.index + match[0].length;
@@ -95,6 +98,26 @@ function parseSubtitleHTML(text: string): React.ReactNode {
               break;
             case "s":
               element = <s key={`s-${idx}`}>{childElements}</s>;
+              break;
+            case "font":
+              const style: React.CSSProperties = {};
+              const colorMatch = item.attributes?.match(
+                /color=(?:"([^"]+)"|'([^']+)'|([^>\s]+))/i,
+              );
+              if (colorMatch)
+                style.color = colorMatch[1] || colorMatch[2] || colorMatch[3];
+
+              const faceMatch = item.attributes?.match(
+                /face=(?:"([^"]+)"|'([^']+)'|([^>\s]+))/i,
+              );
+              if (faceMatch)
+                style.fontFamily = faceMatch[1] || faceMatch[2] || faceMatch[3];
+
+              element = (
+                <span key={`span-${idx}`} style={style}>
+                  {childElements}
+                </span>
+              );
               break;
             default:
               element = <span key={`span-${idx}`}>{childElements}</span>;
