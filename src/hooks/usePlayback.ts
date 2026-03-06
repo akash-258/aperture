@@ -1,5 +1,5 @@
 import { usePlaybackContext } from "../playback/context/PlaybackContext";
-import { fetchMediaDetails } from "../actions";
+import { fetchMediaDetails, getNextEpisodeForSeries } from "../actions";
 import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
 
 export interface PlayOptions {
@@ -17,11 +17,29 @@ export function usePlayback() {
   const play = async (options: PlayOptions) => {
     try {
       let selectedVersion = options.selectedVersion;
+      let targetId = options.id;
+      let targetName = options.name;
+      let targetType = options.type;
+      let resumePosition = options.resumePositionTicks;
+
+      if (targetType === "Series") {
+        console.log("Fetching next episode for series...");
+        const nextEpisode = await getNextEpisodeForSeries(targetId);
+        if (nextEpisode) {
+          targetId = nextEpisode.Id!;
+          targetType = "Episode";
+          targetName =
+            nextEpisode.Name || nextEpisode.OriginalTitle || "Episode";
+          resumePosition = nextEpisode.UserData?.PlaybackPositionTicks || 0;
+        } else {
+          throw new Error("No playable episodes found for series.");
+        }
+      }
 
       // If no version provided, fetch item details to get media sources
       if (!selectedVersion) {
         console.log("No version selected, fetching item details...");
-        const itemDetails = await fetchMediaDetails(options.id);
+        const itemDetails = await fetchMediaDetails(targetId);
         if (
           itemDetails &&
           itemDetails.MediaSources &&
@@ -36,15 +54,15 @@ export function usePlayback() {
 
       // Delegate URL generation to manager to handle default audio/subtitle selection
       const item: BaseItemDto = {
-        Id: options.id,
-        Name: options.name,
-        MediaType: options.type as any,
+        Id: targetId,
+        Name: targetName,
+        MediaType: targetType as any,
         RunTimeTicks: selectedVersion?.RunTimeTicks,
         MediaSources: selectedVersion ? [selectedVersion] : [],
       };
 
       await manager.play(item, {
-        startPositionTicks: options.resumePositionTicks,
+        startPositionTicks: resumePosition,
         mediaSourceId: selectedVersion?.Id,
         audioStreamIndex: options.audioStreamIndex,
       });
