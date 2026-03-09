@@ -484,7 +484,7 @@ export async function reportPlaybackStopped(
 }
 
 export async function fetchLibraryItems(
-  libraryId: string,
+  libraryDetails: { id: string; collectionType?: string | undefined },
   limit: number = 50,
   startIndex: number = 0,
 ): Promise<{ items: JellyfinItem[]; totalRecordCount: number }> {
@@ -498,7 +498,7 @@ export async function fetchLibraryItems(
 
     const { data } = await getItemsApi(api).getItems({
       userId: user.Id,
-      parentId: libraryId,
+      parentId: libraryDetails.id,
       includeItemTypes: [
         BaseItemKind.Movie,
         BaseItemKind.Series,
@@ -517,8 +517,20 @@ export async function fetchLibraryItems(
       ],
     });
 
+    // need to filter out duplicates for boxSets
+    let uniqueItems = data.Items || [];
+    if (libraryDetails.collectionType === BaseItemKind.BoxSet) {
+      const seenItemIds = new Set<string>();
+      uniqueItems = (data.Items || []).filter((item) => {
+        if (!item?.Id) return true;
+        if (seenItemIds.has(item.Id)) return false;
+        seenItemIds.add(item.Id);
+        return true;
+      });
+    }
+
     return {
-      items: data.Items || [],
+      items: uniqueItems,
       totalRecordCount: data.TotalRecordCount || 0,
     };
   } catch (error) {
