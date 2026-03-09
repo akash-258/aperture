@@ -21,11 +21,10 @@ import { LibraryOptions } from "@jellyfin/sdk/lib/generated-client/models";
 // Type aliases for easier use
 type JellyfinItem = BaseItemDto;
 
-// Media segment types
 export interface MediaSegment {
   Id: string;
   ItemId: string;
-  Type: "Intro" | "Outro";
+  Type: "Commercial" | "Intro" | "Outro" | "Preview" | "Recap" | "Unknown";
   StartTicks: number;
   EndTicks: number;
 }
@@ -617,7 +616,7 @@ export async function fetchSimilarItems(itemId: string, limit: number = 12) {
   }
 }
 
-export async function fetchIntroOutro(
+export async function fetchMediaSegments(
   itemId: string,
 ): Promise<MediaSegmentsResponse | null> {
   try {
@@ -628,27 +627,18 @@ export async function fetchIntroOutro(
     const api = jellyfinInstance.createApi(serverUrl);
     api.accessToken = user.AccessToken;
 
-    const response = await fetch(
-      `${serverUrl}/MediaSegments/${itemId}?includeSegmentTypes=Outro&includeSegmentTypes=Intro`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `MediaBrowser Token="${user.AccessToken}"`,
-        },
-      },
-    );
+    const { getMediaSegmentsApi } =
+      await import("@jellyfin/sdk/lib/utils/api/media-segments-api");
+    const mediaSegmentsApi = getMediaSegmentsApi(api);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const { data } = await mediaSegmentsApi.getItemSegments({
+      itemId,
+    });
 
-    const data = await response.json();
-    return data;
+    return data as any as MediaSegmentsResponse;
   } catch (error) {
-    console.error("Failed to fetch intro/outro segments:", error);
+    console.error("Failed to fetch media segments:", error);
 
-    // If it's an authentication error, throw an error with a special flag
     if (isAuthError(error)) {
       const authError = new Error(
         "Authentication expired. Please sign in again.",

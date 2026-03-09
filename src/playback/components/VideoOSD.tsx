@@ -40,25 +40,11 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
   } = playbackState;
   const { initializeTrickplay, renderThumbnail } = useTrickplay();
   const { checkSegment } = useSkipSegments(currentItem?.Id);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const activeSegment = checkSegment(currentTime);
   const durationSeconds = duration;
 
-  const {
-    chapters,
-    introSegment,
-    creditsSegment,
-    activeChapter,
-    isInIntro,
-    isInCredits,
-  } = useMemo(() => {
+  const { chapters, activeChapter } = useMemo(() => {
     const chapters = (currentItem as any)?.Chapters || [];
-    const introSegment = chapters.find(
-      (ch: any) => ch.Name?.toLowerCase() === "intro",
-    );
-    const creditsSegment = chapters.find(
-      (ch: any) => ch.Name?.toLowerCase() === "credits",
-    );
 
     const activeChapter =
       currentTime !== null
@@ -72,15 +58,9 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
           })
         : null;
 
-    const isInIntro = activeChapter?.Name?.toLowerCase() === "intro";
-    const isInCredits = activeChapter?.Name?.toLowerCase() === "credits";
     return {
       chapters,
-      introSegment,
-      creditsSegment,
       activeChapter,
-      isInIntro,
-      isInCredits,
     };
   }, [currentItem, currentTime, durationSeconds]);
 
@@ -277,12 +257,7 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
 
         <VideoOSDSkipButtons
           manager={manager}
-          chapters={chapters}
-          introSegment={introSegment}
-          creditsSegment={creditsSegment}
-          durationSeconds={durationSeconds}
-          isInIntro={isInIntro}
-          isInCredits={isInCredits}
+          activeSegment={activeSegment}
           hasNextEpisode={hasNextEpisode}
           nextEpisodeData={nextEpisodeData}
           handleMouseMove={handleMouseMove}

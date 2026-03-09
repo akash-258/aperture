@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchIntroOutro, MediaSegment } from "../actions/media";
+import { fetchMediaSegments, MediaSegment } from "../actions/media";
 
 export const useSkipSegments = (itemId: string | undefined | null) => {
   const [segments, setSegments] = useState<MediaSegment[]>([]);
@@ -10,7 +10,7 @@ export const useSkipSegments = (itemId: string | undefined | null) => {
       return;
     }
 
-    fetchIntroOutro(itemId)
+    fetchMediaSegments(itemId)
       .then((response) => {
         if (response && response.Items) {
           setSegments(response.Items);
