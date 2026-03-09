@@ -519,7 +519,7 @@ export async function fetchLibraryItems(
 
     // need to filter out duplicates for boxSets
     let uniqueItems = data.Items || [];
-    if (libraryDetails.collectionType === BaseItemKind.BoxSet) {
+    if (libraryDetails.collectionType === "boxsets") {
       const seenItemIds = new Set<string>();
       uniqueItems = (data.Items || []).filter((item) => {
         if (!item?.Id) return true;
