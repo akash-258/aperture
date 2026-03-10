@@ -15,6 +15,7 @@ import { VideoOSDSkipButtons } from "./osd/VideoOSDSkipButtons";
 import { VideoOSDTransport } from "./osd/VideoOSDTransport";
 import { VideoOSDTimeline } from "./osd/VideoOSDTimeline";
 import { Maximize } from "lucide-react";
+import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
 
 interface VideoOSDProps {
   manager: PlaybackContextValue;
@@ -72,7 +73,9 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
 
   const [isHovering, setIsHovering] = useState(false);
   const [lastActivity, setLastActivity] = useState(dateObject);
-  const [nextEpisodeData, setNextEpisodeData] = useState<any>(null);
+  const [nextEpisodeData, setNextEpisodeData] = useState<BaseItemDto | null>(
+    null,
+  );
 
   const hasNextEpisode = !_.isEmpty(nextEpisodeData);
 

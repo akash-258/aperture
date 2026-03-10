@@ -9,9 +9,13 @@ import {
   Maximize,
   Minimize,
   PictureInPicture,
+  StepBack,
+  StepForward,
 } from "lucide-react";
+import _ from "lodash";
 import { PlaybackContextValue } from "@/src/playback/hooks/usePlaybackManager";
 import { formatVideoTime } from "@/src/lib/utils";
+import { VideoOSDPlaybackButton } from "./VideoOSDPlaybackButton";
 
 interface VideoOSDTransportProps {
   manager: PlaybackContextValue;
@@ -34,36 +38,46 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
   isFullscreen,
   toggleFullscreen,
 }) => {
+  function handleSeekBack() {
+    manager.seek(Math.max(0, currentTime - 10) * 10000000);
+  }
+
+  function handleSeekForward() {
+    manager.seek(Math.min(duration, currentTime + 10) * 10000000);
+  }
+
+  function handlePlayPause() {
+    if (paused) {
+      manager.unpause();
+    } else {
+      manager.pause();
+    }
+  }
+
+  function handlePreviousEpisode() {}
+
+  function handleNextEpisode() {}
+
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-4 md:gap-6 flex-1">
-        <button
-          onClick={() => manager.seek(Math.max(0, currentTime - 10) * 10000000)}
-          className="text-white/70 hover:text-white transition-colors"
-        >
-          <RotateCcw className="w-6 h-6" />
-        </button>
-
-        <button
-          onClick={paused ? manager.unpause : manager.pause}
-          className="bg-white text-black rounded-full w-12 h-12 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-        >
-          {paused ? (
-            <Play className="w-6 h-6 text-black fill-black ml-0.5" />
-          ) : (
-            <Pause className="w-6 h-6 text-black fill-black" />
-          )}
-        </button>
-
-        <button
-          onClick={() =>
-            manager.seek(Math.min(duration, currentTime + 10) * 10000000)
-          }
-          className="text-white/70 hover:text-white transition-colors"
-        >
-          <RotateCw className="w-6 h-6" />
-        </button>
-
+        <VideoOSDPlaybackButton
+          handleClick={handlePreviousEpisode}
+          Icon={StepBack}
+        />
+        <VideoOSDPlaybackButton handleClick={handleSeekBack} Icon={RotateCcw} />
+        <VideoOSDPlaybackButton
+          handleClick={handlePlayPause}
+          Icon={paused ? Play : Pause}
+        />
+        <VideoOSDPlaybackButton
+          handleClick={handleSeekForward}
+          Icon={RotateCw}
+        />
+        <VideoOSDPlaybackButton
+          handleClick={handleNextEpisode}
+          Icon={StepForward}
+        />
         <div className="flex items-center gap-2 ml-2 group/volume">
           <button
             onClick={manager.toggleMute}
